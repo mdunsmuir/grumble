@@ -22,6 +22,7 @@ main = do
   getLine
 
   cancel listenAsync
+  sendMessage conn (Message Nothing QUIT (Parameters [] Nothing))
   close conn
 
 listen :: Connection -> IO ()

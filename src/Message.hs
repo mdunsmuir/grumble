@@ -15,6 +15,10 @@ import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char
 import Grelude
 
+instance Show Message where
+  show msg = let shown = convertString $ encode msg
+             in  take (length shown - 2) shown
+
 -- | Basic USER message that gets sent when a connection is opened
 user :: String -> String -> Message
 user u n = Message Nothing USER (Parameters [u, "0", "*", n] Nothing)
@@ -27,9 +31,13 @@ encode Message{..} =
         Just trail -> params' ++ [':' : trail]
         Nothing -> params'
 
+      cmdStr = case msgCommand of
+        Numeric n -> show n
+        named -> show named
+
       parts = case msgPrefix of
-        Nothing -> show msgCommand : params
-        Just pref -> (':' : pref) : show msgCommand : params
+        Nothing -> cmdStr : params
+        Just pref -> (':' : pref) : cmdStr : params
 
   in  convertString (intercalate " " parts ++ "\r\n")
 

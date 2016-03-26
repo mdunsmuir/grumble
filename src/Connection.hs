@@ -49,7 +49,7 @@ getConnection ConnectParams{..} = do
           let (msgs, frags') = parseIncoming frags raw
 
           forM_ msgs $ \msg -> do
-            debugM rootLoggerName ("Received message: " ++ show msg)
+            debugM rootLoggerName ("<< " ++ show msg)
             writeChan chan msg
 
           loop frags'
@@ -81,5 +81,5 @@ getConnection ConnectParams{..} = do
 -- | Send a message to the server
 send :: Message -> Socket -> IO ()
 send msg sock = do
-  debugM rootLoggerName ("Sending message: " ++ show msg)
+  debugM rootLoggerName (">> " ++ show msg)
   BSock.sendAll sock (encode msg)

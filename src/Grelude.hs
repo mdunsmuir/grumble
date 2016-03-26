@@ -25,18 +25,68 @@ data Message = Message
              
              | UnDecodable B.ByteString String
              | LostConnection
-               deriving Show
 
 type Prefix = String
 
-data Command = JOIN
+
+data Command = ADMIN
+             | AWAY
+             | CNOTICE
+             | CPRIVMSG
+             | CONNECT
+             | DIE
+             | ENCAP
+             | ERROR
+             | HELP
+             | INFORMATION
+             | INVITE
+             | ISON
+             | JOIN
+             | KICK
+             | KILL
+             | KNOCK
+             | LINKS
+             | LIST
+             | LUSERS
              | MODE
+             | MOTD
+             | NAMES
+             | NAMESX
              | NICK
              | NOTICE
+             | OPER
+             | PART
+             | PASS
              | PING
              | PONG
-             | PRIVMSG 
+             | PRIVMSG
+             | QUIT
+             | REHASH
+             | RESTART
+             | RULES
+             | SERVER
+             | SERVICE
+             | SERVLIST
+             | SQUERY
+             | SQUIT
+             | SETNAME
+             | SILENCE
+             | STATS
+             | SUMMON
+             | TIME
+             | TOPIC
+             | TRACE
+             | UHNAMES
              | USER
+             | USERHOST
+             | USERIP
+             | USERS
+             | VERSION
+             | WALLOPS
+             | WATCH
+             | WHO
+             | WHOIS
+             | WHOWAS
              | Numeric Int
                deriving (Read, Show)
 
@@ -49,8 +99,6 @@ type Parameter = String
 
 data GrumbleException = CouldNotResolveHostName
                       | ServerClosedConnection
-                      | UnEncodableMessage Message
-                      | UnDecodableMessage String
                         deriving (Show, Typeable)
 
 instance Exception GrumbleException where

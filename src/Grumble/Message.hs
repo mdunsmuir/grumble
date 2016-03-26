@@ -7,6 +7,7 @@ module Grumble.Message
 , user
 , encode
 , decode
+, parseIncoming
 ) where
 
 import Data.List (words, intercalate, isPrefixOf)
@@ -23,7 +24,8 @@ data Message = Message
              , msgParams :: Parameters }
              
              | UnDecodable B.ByteString String
-             | LostConnection
+             | NoMoreMessages
+               --deriving Show
 
 instance Show Message where
   show msg = let shown = convertString $ encode msg
@@ -89,7 +91,8 @@ data Command = ADMIN
              | WHO
              | WHOIS
              | WHOWAS
-             | Numeric Int
+             | Reply Int
+             | ErrorReply ErrorReplyCode
                deriving (Read, Show)
 
 data Parameters = Parameters
@@ -112,7 +115,8 @@ encode Message{..} =
         Nothing -> params'
 
       cmdStr = case msgCommand of
-        Numeric n -> show n
+        ErrorReply n -> show (400 + fromEnum n)
+        Reply n -> show n
         named -> show named
 
       parts = case msgPrefix of
@@ -151,7 +155,14 @@ parsePrefix :: Parser (Maybe Prefix)
 parsePrefix = (char ':' >> (Just <$> manyTill anyChar space)) <|> return Nothing
 
 parseCommand :: Parser Command
-parseCommand = try (read <$> many1 letter) <|> (Numeric . read <$> many1 digit)
+parseCommand = try (read <$> many1 letter) <|> numeric
+  where
+    numeric = do
+      (hundo:code) <- sequence $ replicate 3 digit
+      let [hundo', code'] = map read [[hundo], code] :: [Int]
+      return $ case hundo' of
+        4 -> ErrorReply (toEnum code')
+        _ -> Reply (hundo' * 100 + code')
 
 parseParams :: Parser Parameters
 parseParams = do

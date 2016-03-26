@@ -1,32 +1,21 @@
 module Main where
 
 import Grumble.Prelude
-import Grumble.Connection
+import Grumble.Client
 
 main :: IO ()
 main = do
-  -- set up logger
-  logger <- getRootLogger
   updateGlobalLogger rootLoggerName (setLevel DEBUG)
 
-  -- connect
-  conn <- getConnection (ConnectParams "irc.freenode.net" 6666)
-  listenAsync <- async (listen conn)
+  let connParams = ConnectParams "irc.freenode.net" 6666
+      usrCfg = UserConfig "caconym_test" "caconym_test"
+      cltCfg = ClientConfig "caconym_test" usrCfg connParams
 
-  sendMessage conn (user "caconym_test" "caconym_test")
-  sendMessage conn (Message Nothing NICK (Parameters ["caconym_test"] Nothing))
+  debugM rootLoggerName ("Using client parameters: " ++ show cltCfg)
+
+  client <- getClient cltCfg
 
   putStrLn "Press enter to quit"
   getLine
 
-  cancel listenAsync
-  sendMessage conn (Message Nothing QUIT (Parameters [] Nothing))
-  close conn
-
-listen :: Connection -> IO ()
-listen conn@Connection{..} = do
-  msg <- readChan incomingMessages
-  case msg of
-    LostConnection -> debugM rootLoggerName "Failed to read from server"
-    Message _ PING params -> sendMessage (Message Nothing PONG params) >> listen conn
-    _ -> listen conn
+  cltQuit client

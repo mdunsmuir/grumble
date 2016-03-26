@@ -3,11 +3,11 @@ version:             0.1.0.0
 synopsis:            IRC client for fun
 description:         Please see README.md
 homepage:            http://github.com/mdunsmuir/grumble#readme
-license:             BSD3
+license:             AllRightsReserved
 license-file:        LICENSE
 author:              Michael Dunsmuir
 maintainer:          mjdunsmuir@gmail.com
-copyright:           2016 Michael Dunsmuir
+copyright:           Copyright (c) 2016 Michael Dunsmuir
 category:            Web
 build-type:          Simple
 -- extra-source-files:

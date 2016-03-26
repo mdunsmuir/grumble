@@ -12,6 +12,7 @@ import Control.Monad
 import Control.Concurrent.Chan
 import Control.Concurrent.Async
 import Control.Exception hiding (try)
+import Text.Parsec (ParseError)
 import Data.Typeable
 
 data Message = NICK String

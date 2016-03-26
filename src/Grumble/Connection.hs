@@ -1,18 +1,17 @@
-module Connection
+module Grumble.Connection
 ( ConnectParams (..)
 , Connection (..)
 , getConnection
-, module Message
+, module Grumble.Message
 ) where
 
 import Control.Concurrent.MVar
-import System.Log.Logger
 import Network.Socket hiding (send, recv, close)
 import qualified Network.Socket as Sock
 import qualified Network.Socket.ByteString as BSock
 import qualified Data.ByteString as B
-import Grelude
-import Message
+import Grumble.Prelude
+import Grumble.Message
 
 data ConnectParams = ConnectParams
                    { cpHost :: String

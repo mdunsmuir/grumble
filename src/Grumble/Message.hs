@@ -1,23 +1,103 @@
-module Message
-( user
+module Grumble.Message
+( Message (..)
+, Prefix
+, Command (..)
+, Parameters (..)
+, Parameter
+, user
 , encode
 , decode
-, parseIncoming
 ) where
 
-import Data.String.Conversions
 import Data.List (words, intercalate, isPrefixOf)
 import qualified Data.ByteString as B
-import Data.String.Conversions
-import Data.Either
 import Text.Parsec
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char
-import Grelude
+
+import Grumble.Prelude
+
+data Message = Message
+             { msgPrefix :: Maybe Prefix
+             , msgCommand :: Command
+             , msgParams :: Parameters }
+             
+             | UnDecodable B.ByteString String
+             | LostConnection
 
 instance Show Message where
   show msg = let shown = convertString $ encode msg
              in  take (length shown - 2) shown
+
+type Prefix = String
+
+data Command = ADMIN
+             | AWAY
+             | CNOTICE
+             | CPRIVMSG
+             | CONNECT
+             | DIE
+             | ENCAP
+             | ERROR
+             | HELP
+             | INFORMATION
+             | INVITE
+             | ISON
+             | JOIN
+             | KICK
+             | KILL
+             | KNOCK
+             | LINKS
+             | LIST
+             | LUSERS
+             | MODE
+             | MOTD
+             | NAMES
+             | NAMESX
+             | NICK
+             | NOTICE
+             | OPER
+             | PART
+             | PASS
+             | PING
+             | PONG
+             | PRIVMSG
+             | QUIT
+             | REHASH
+             | RESTART
+             | RULES
+             | SERVER
+             | SERVICE
+             | SERVLIST
+             | SQUERY
+             | SQUIT
+             | SETNAME
+             | SILENCE
+             | STATS
+             | SUMMON
+             | TIME
+             | TOPIC
+             | TRACE
+             | UHNAMES
+             | USER
+             | USERHOST
+             | USERIP
+             | USERS
+             | VERSION
+             | WALLOPS
+             | WATCH
+             | WHO
+             | WHOIS
+             | WHOWAS
+             | Numeric Int
+               deriving (Read, Show)
+
+data Parameters = Parameters
+                { parRegulars :: [Parameter]
+                , parTrailing :: Maybe Parameter
+                } deriving Show
+
+type Parameter = String
 
 -- | Basic USER message that gets sent when a connection is opened
 user :: String -> String -> Message

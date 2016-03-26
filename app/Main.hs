@@ -1,9 +1,7 @@
 module Main where
 
-import Control.Concurrent.Async
-import System.Log.Logger
-import Grelude
-import Connection
+import Grumble.Prelude
+import Grumble.Connection
 
 main :: IO ()
 main = do

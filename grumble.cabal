@@ -19,6 +19,7 @@ library
                      , Grumble.Connection
                      , Grumble.Prelude
                      , Grumble.Client
+                     , Grumble.Client.Types
   build-depends:       base >= 4.7 && < 5
                      , network
                      , hslogger
@@ -26,6 +27,7 @@ library
                      , string-conversions
                      , parsec
                      , async
+                     , mtl
   extensions:          RecordWildCards
                      , DeriveDataTypeable
                      , OverloadedStrings

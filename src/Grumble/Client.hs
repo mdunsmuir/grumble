@@ -4,27 +4,14 @@ module Grumble.Client
 , ClientConfig (..)
 , ConnectParams (..)
 , getClient
+, module Grumble.Client.Types
 ) where
 
 import Grumble.Prelude
 import Grumble.Message
 import Grumble.Connection
-
-data Client = Client
-            { cltSendMessage :: Message -> IO ()
-            , cltIncomingMessages :: Chan Message
-            , cltQuit :: IO () }
-
-data UserConfig = UserConfig
-                { usrCfgUserName :: String
-                , usrCfgRealName :: String
-                } deriving Show
-
-data ClientConfig = ClientConfig
-                  { cltCfgNick :: String
-                  , cltCfgUserConfig :: UserConfig
-                  , cltCfgConnectParams :: ConnectParams
-                  } deriving Show
+import Grumble.Client.Types
+import Grumble.Client.Monad
 
 getClient :: ClientConfig -> IO Client
 getClient cc@ClientConfig{..} = do

@@ -1,6 +1,9 @@
 module Grelude 
 ( Message (..)
-, IncomingMessage (..)
+, Prefix
+, Command (..)
+, Parameters (..)
+, Parameter
 , GrumbleException (..)
 , module Control.Exception
 , module Control.Monad
@@ -12,20 +15,37 @@ import Control.Monad
 import Control.Concurrent.Chan
 import Control.Concurrent.Async
 import Control.Exception hiding (try)
-import Text.Parsec (ParseError)
+import qualified Data.ByteString as B
 import Data.Typeable
 
-data Message = NICK String
-             | USER String String String String
-             | PING String
-             | PONG String
-             | Unknown String
-             | ReadFailure
+data Message = Message
+             { msgPrefix :: Maybe Prefix
+             , msgCommand :: Command
+             , msgParams :: Parameters }
+             
+             | UnDecodable B.ByteString String
+             | LostConnection
                deriving Show
 
-data IncomingMessage = IncomingWithPrefix String Message
-                     | IncomingWithoutPrefix Message
-                       deriving Show
+type Prefix = String
+
+data Command = JOIN
+             | MODE
+             | NICK
+             | NOTICE
+             | PING
+             | PONG
+             | PRIVMSG 
+             | USER
+             | Numeric Int
+               deriving (Read, Show)
+
+data Parameters = Parameters
+                { parRegulars :: [Parameter]
+                , parTrailing :: Maybe Parameter
+                } deriving Show
+
+type Parameter = String
 
 data GrumbleException = CouldNotResolveHostName
                       | ServerClosedConnection

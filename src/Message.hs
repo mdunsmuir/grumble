@@ -1,6 +1,7 @@
 module Message
 ( user
 , encode
+, decode
 , parseIncoming
 ) where
 
@@ -16,14 +17,21 @@ import Grelude
 
 -- | Basic USER message that gets sent when a connection is opened
 user :: String -> String -> Message
-user u n = USER u "0" "*" n
+user u n = Message Nothing USER (Parameters [u, "0", "*", n] Nothing)
 
 -- | Encode a message for transmission
 encode :: Message -> B.ByteString
-encode msg = convertString $ (++ "\r\n") $ case msg of
-  NICK nick -> "NICK " ++ nick
-  USER user mode server name -> "USER " ++ intercalate " " [user, mode, server, ":" ++ name] 
-  _ -> throw (UnEncodableMessage msg)
+encode Message{..} =
+  let Parameters params' mtrail = msgParams
+      params = case mtrail of
+        Just trail -> params' ++ [':' : trail]
+        Nothing -> params'
+
+      parts = case msgPrefix of
+        Nothing -> show msgCommand : params
+        Just pref -> (':' : pref) : show msgCommand : params
+
+  in  convertString (intercalate " " parts ++ "\r\n")
 
 -- | Combine some already-received fragments and a fresh fragment into zero
 --   or more parsed messages, and any leftover input
@@ -44,28 +52,31 @@ parseIncoming prev new =
       return (map convertString completeMessages, convertString endingFragment)
 
 decode :: B.ByteString -> Message
-decode str = either (const $ Unknown (convertString str)) id $
-               runParser decodeParser () "Message" str
+decode str = either (UnDecodable str . show) id $ runParser parseMessage () "message" str
 
-decodeParser :: Parser Message
-decodeParser = parsePing 
+parseMessage :: Parser Message
+parseMessage = Message <$> try parsePrefix
+                       <*> parseCommand
+                       <*> parseParams
 
-parseMsgParams :: Parser [String]
-parseMsgParams = do
-  raw <- manyTill anyChar eof
-  let parts = words raw
-      f :: [String] -> [String]
-      f [] = []
-      f (s:ss)
-        | ":" `isPrefixOf` s = [intercalate " " (tail s : ss)]
-        | otherwise = s : f ss
-  return (f parts)
+parsePrefix :: Parser (Maybe Prefix)
+parsePrefix = (char ':' >> (Just <$> manyTill anyChar space)) <|> return Nothing
 
-parsePing :: Parser Message
-parsePing = do
-  string "PING"
-  params <- parseMsgParams
-  if length params /= 1
-    then parserFail "Too many or too few parameters in PING message!"
-    else let [msg] = params in return (PING msg)
+parseCommand :: Parser Command
+parseCommand = try (read <$> many1 letter) <|> (Numeric . read <$> many1 digit)
 
+parseParams :: Parser Parameters
+parseParams = do
+  many space
+  params <- (try trailing <|> many1 (noneOf ['\NUL', '\r', '\n', ' '])) `sepBy` many1 space
+
+  -- I had a LOT of trouble getting parsec to do what I wanted here so rather
+  -- than finding a real solution I resorted to this ugly, ugly hack.
+  let rparams = reverse params
+  return $ case rparams of
+    [] -> Parameters [] Nothing
+    ps'@(t:ps) -> case t of
+                (':':ts) -> Parameters (reverse ps) (Just ts)
+                _   -> Parameters (reverse ps') Nothing
+  where
+    trailing = char ':' >> (':' :) <$> many1 (noneOf ['\NUL', '\r', '\n'])

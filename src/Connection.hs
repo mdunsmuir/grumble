@@ -43,7 +43,7 @@ getConnection ConnectParams{..} = do
 
           -- An empty read means the connection is no longer active
           when (B.null raw) $ do
-            writeChan chan ReadFailure
+            writeChan chan LostConnection
             throwIO ServerClosedConnection
 
           let (msgs, frags') = parseIncoming frags raw

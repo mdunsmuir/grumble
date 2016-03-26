@@ -16,7 +16,7 @@ main = do
   listenAsync <- async (listen conn)
 
   sendMessage conn (user "caconym_test" "caconym_test")
-  sendMessage conn (NICK "caconym_test")
+  sendMessage conn (Message Nothing NICK (Parameters ["caconym_test"] Nothing))
 
   putStrLn "Press enter to quit"
   getLine
@@ -28,6 +28,6 @@ listen :: Connection -> IO ()
 listen conn@Connection{..} = do
   msg <- readChan incomingMessages
   case msg of
-    ReadFailure -> debugM rootLoggerName "Failed to read from server"
-    PING str -> sendMessage (PONG str) >> listen conn
+    LostConnection -> debugM rootLoggerName "Failed to read from server"
+    Message _ PING params -> sendMessage (Message Nothing PONG params) >> listen conn
     _ -> listen conn

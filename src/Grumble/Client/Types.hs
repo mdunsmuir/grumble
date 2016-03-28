@@ -48,6 +48,9 @@ data Responder = Responder
 -- Update message stuff (emitted to clients of Client)
 
 data Update = PingPong
+            | NickRetry String
+            | NickAccepted String
+            | EndMotd
               deriving Show
 
 data ClientMessage = ClientUpdate Update

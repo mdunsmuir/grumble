@@ -115,7 +115,6 @@ encode Message{..} =
         Nothing -> params'
 
       cmdStr = case msgCommand of
-        ErrorReply n -> show (400 + fromEnum n)
         Reply n -> show n
         named -> show named
 
@@ -161,7 +160,6 @@ parseCommand = try (read <$> many1 letter) <|> numeric
       (hundo:code) <- sequence $ replicate 3 digit
       let [hundo', code'] = map read [[hundo], code] :: [Int]
       return $ case hundo' of
-        4 -> ErrorReply (toEnum code')
         _ -> Reply (hundo' * 100 + code')
 
 parseParams :: Parser Parameters

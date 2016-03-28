@@ -19,9 +19,9 @@ data ConnectParams = ConnectParams
                    } deriving Show
 
 data Connection = Connection
-                { sendMessage :: Message -> IO ()
-                , incomingMessages :: Chan Message
-                , close :: IO () }
+                { conSendMessage :: Message -> IO ()
+                , conIncomingMessages :: Chan Message
+                , conClose :: IO () }
 
 -- | Get a new socket of the sort we like
 getSocket :: IO Socket

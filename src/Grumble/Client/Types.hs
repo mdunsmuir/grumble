@@ -1,14 +1,13 @@
 module Grumble.Client.Types
-( Client (..)
-, UserConfig (..)
+( UserConfig (..)
 , ClientConfig (..)
 , ClientState (..)
 , ClientM
 , Responder (..)
 , ResponderAction
 , ResponderM
-, Update
-, ClientMessage
+, Update (..)
+, ClientMessage (..)
 ) where
 
 import Control.Monad.State
@@ -16,11 +15,6 @@ import Control.Monad.Reader
 import Grumble.Prelude
 import Grumble.Message
 import Grumble.Connection
-
-data Client = Client
-            { cltSendMessage :: Message -> IO ()
-            , cltIncomingMessages :: Chan Message
-            , cltQuit :: IO () }
 
 data UserConfig = UserConfig
                 { usrCfgUserName :: String
@@ -53,7 +47,8 @@ data Responder = Responder
 
 -- Update message stuff (emitted to clients of Client)
 
-data Update = Update
+data Update = PingPong
+              deriving Show
 
 data ClientMessage = ClientUpdate Update
                    | ClientIncomingMessage Message

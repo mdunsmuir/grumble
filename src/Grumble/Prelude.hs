@@ -2,7 +2,7 @@ module Grumble.Prelude
 ( GrumbleException (..)
 , ErrorReplyCode (..)
 , module System.Log.Logger
-, module Control.Exception
+, module Control.Exception.Lifted
 , module Control.Monad
 , module Control.Concurrent.Chan
 , module Control.Concurrent.Async
@@ -15,7 +15,7 @@ import System.Log.Logger
 import Control.Monad
 import Control.Concurrent.Chan
 import Control.Concurrent.Async
-import Control.Exception hiding (try)
+import Control.Exception.Lifted hiding (try)
 import Data.Maybe
 import Data.Either
 import Data.String.Conversions

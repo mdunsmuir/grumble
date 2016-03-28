@@ -1,7 +1,9 @@
 module Main where
 
 import Grumble.Prelude
+import Grumble.Connection
 import Grumble.Client
+import Grumble.Client.Responders
 
 main :: IO ()
 main = do
@@ -13,9 +15,10 @@ main = do
 
   debugM rootLoggerName ("Using client parameters: " ++ show cltCfg)
 
-  client <- getClient cltCfg
+  (sendMsg, _, cltAsync) <- runClient cltCfg [pingPong]
 
   putStrLn "Press enter to quit"
   getLine
 
-  cltQuit client
+  sendMsg $ Message Nothing QUIT (Parameters [] Nothing)
+  wait cltAsync

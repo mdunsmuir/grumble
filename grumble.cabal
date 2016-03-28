@@ -20,6 +20,8 @@ library
                      , Grumble.Prelude
                      , Grumble.Client
                      , Grumble.Client.Types
+                     , Grumble.Client.Monad
+                     , Grumble.Client.Responders
   build-depends:       base >= 4.7 && < 5
                      , network
                      , hslogger
@@ -28,6 +30,7 @@ library
                      , parsec
                      , async
                      , mtl
+                     , lifted-base
   extensions:          RecordWildCards
                      , DeriveDataTypeable
                      , OverloadedStrings

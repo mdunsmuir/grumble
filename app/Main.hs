@@ -18,7 +18,7 @@ main = do
   let resps = [ pingPong
               , nickRetry "caconym_test"
               , listenMotdEnd ]
-  (sendMsg, msgs, cltAsync) <- runClient cltCfg resps
+  Client sendMsg msgs cltAsync <- runClient cltCfg resps
 
   async (msgListener msgs)
   putStrLn "Press enter to quit"
@@ -27,7 +27,7 @@ main = do
   sendMsg $ Message Nothing QUIT (Parameters [] Nothing)
   wait cltAsync
 
-msgListener :: Chan ClientMessage -> IO ()
+msgListener :: Chan (ClientMessage Update) -> IO ()
 msgListener incoming = forever $ do
   msg <- readChan incoming
   case msg of

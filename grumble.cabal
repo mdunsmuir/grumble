@@ -34,6 +34,7 @@ library
   extensions:          RecordWildCards
                      , DeriveDataTypeable
                      , OverloadedStrings
+                     , TupleSections
   default-language:    Haskell2010
 
 executable grumble

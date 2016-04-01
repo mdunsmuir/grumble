@@ -9,50 +9,45 @@ import Grumble.Message
 import Grumble.Client.Types
 import Grumble.Client.Monad
 
-pingPong :: Responder
-pingPong =
-  let action = do
-        msg <- getMessage
-        case msg of
-          -- if PING, send PONG
-          Message _ PING params -> do
-            sendMessage (Message Nothing PONG params)
-            return ([PingPong], [pingPong]) 
-          _ -> return ([], [pingPong])
-  in  Responder action (return ())
+noFinalizer :: ResponderM u () -> Responder u
+noFinalizer act = Responder act (return ())
 
-nickRetry :: String -> Responder
-nickRetry lastAttempt = Responder action (return ())
-  where
-    -- we do the usual thing where we add underscores until the nick
-    -- is accepted by the server
-    thisAttempt = lastAttempt ++ "_"
-    changeMsg = Message Nothing NICK (Parameters [thisAttempt] Nothing)
+-- | Respond to pings with pongs. Forever.
+pingPong :: Responder Update
+pingPong = noFinalizer $ do
+  msg <- getMessage
+  case msg of
+    -- if PING, send PONG
+    Message _ PING params -> do
+      sendMessage (Message Nothing PONG params)
+      emitUpdate PingPong
+    _ -> return ()
+  emitResponder pingPong
 
-    action = do
-      msg <- getMessage
-      case msg of
-        -- on nick taken, try changing it and re-register responder
-        Message _ (Reply 433) _ -> do
-          sendMessage changeMsg
-          return ([NickRetry thisAttempt], [nickRetry thisAttempt]) 
+-- | Retry nickname registration until we get one that isn't taken. We use the
+--   normal IRC convention of appending underscores.
+nickRetry :: String -> Responder Update
+nickRetry lastAttempt = noFinalizer $ do
+  let thisAttempt = lastAttempt ++ "_"
+      changeMsg = Message Nothing NICK (Parameters [thisAttempt] Nothing)
 
-        -- if our last attempt "took", we're done
-        Message _ _ (Parameters (nick:_) _) ->
-          return $ if nick == lastAttempt
-            then ([NickAccepted lastAttempt], [])
-            else ([], [nickRetry lastAttempt])
-            
+  msg <- getMessage
+  case msg of
+    Message _ (Reply 433) _ -> do
+      sendMessage changeMsg
+      emitUpdate $ NickRetry thisAttempt
+      emitResponder $ nickRetry thisAttempt
 
-        -- otherwise keep listening
-        _ -> return ([], [nickRetry lastAttempt])
+    Message _ _ (Parameters (nick:_) _) ->
+      if nick == lastAttempt
+        then emitUpdate $ NickAccepted lastAttempt
+        else emitResponder $ nickRetry lastAttempt
 
-listenMotdEnd :: Responder
-listenMotdEnd = Responder action (return ())
-  where
-    action = do
-      msg <- getMessage
-      case msg of
-        Message _ (Reply 376) _ -> return ([EndMotd], [])
-        _ -> return ([], [listenMotdEnd])
+    _ -> emitResponder $ nickRetry lastAttempt
 
+listenMotdEnd :: Responder Update
+listenMotdEnd = noFinalizer $ do
+  msg <- getMessage
+  case msg of
+    Message _ (Reply 376) _ -> emitUpdate EndMotd
+    _ -> emitResponder listenMotdEnd

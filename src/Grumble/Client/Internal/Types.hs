@@ -1,30 +1,16 @@
--- | Throughout this module, the type parameter 'u' refers to the type of the
---   updates that responders can emit. See 'Client'.
-module Grumble.Client.Types
-( -- * Basic Client-Related Types
-  Client (..)
+module Grumble.Client.Internal.Types
+( Client (..)
 , ClientMessage (..)
 
-  -- * Configuration
 , UserConfig (..)
 , ClientConfig (..)
 
-  -- * Responders
-  --
-  -- | Responders let clients of this library define behavior for handling
-  --   incoming requests. See "Grumble.Client.Monad" for more.
-, ResponderM
+, ResponderM (..)
 , Responder (..)
 , ResponderEmission (..)
 
-  -- * ClientM
-  -- 
-  -- | The main client loop runs in a state monad with state 'ClientState'.
-  --   This is really only for use internal to this library.
 , ClientM
 , ClientState (..)
-
-, Update (..)
 ) where
 
 import Control.Monad.State
@@ -58,21 +44,16 @@ type ClientM u = StateT (ClientState u) IO
 data ResponderEmission u = EmitResponder (Responder u)
                          | EmitUpdate u
 
--- | Responders run in this monad. See "Grumble.Client.Monad" for the
---   provided operations.
-type ResponderM u = WriterT [ResponderEmission u] (ReaderT Message (ClientM u))
+-- | Responders run in this monad.
+newtype ResponderM u a = ResponderM (WriterT [ResponderEmission u] (ReaderT Message (ClientM u)) a)
+                         deriving (Functor, Applicative, Monad)
+
+instance MonadIO (ResponderM u) where
+  liftIO = ResponderM . liftIO
 
 data Responder u = Responder
-                 { rspAction :: ResponderM u () -- ^ foobar
+                 { rspAction :: ResponderM u ()
                  , rspFinalize :: ResponderM u () }
-
--- Update message stuff (emitted to clients of Client)
-
-data Update = PingPong
-            | NickRetry String
-            | NickAccepted String
-            | EndMotd
-              deriving Show
 
 data ClientMessage u = ClientUpdate u
                      | ClientIncomingMessage Message

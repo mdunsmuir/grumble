@@ -1,4 +1,6 @@
-module Grumble.Client.Monad 
+-- | Throughout this module, the type parameter 'u' refers to the type of the
+--   updates that responders can emit. See 'Client'.
+module Grumble.Client.Internal.Monad 
 ( runClient
 , getMessage
 , sendMessage
@@ -12,8 +14,12 @@ import Control.Monad.Writer
 import Grumble.Prelude
 import Grumble.Message
 import Grumble.Connection
-import Grumble.Client.Types
+import Grumble.Client.Internal.Types
 
+-- | A thread is spawned, acting as an interface to an IRC server. The USER
+--   and initial NICK message happen automatically, though it's the client's
+--   responsibility to handle the server's response e.g. by registering a
+--   responder to resolve rejected nicknames.
 runClient :: ClientConfig -- ^ Configuration for the connection, nickname, and so on.
           -> [Responder u] -- ^ A list of initial responders to register.
           -> IO (Client u) -- ^ A 'Client' "handle".
@@ -62,7 +68,7 @@ clientLoop masterFinalizer outgoingUpdates =
       liftIO masterFinalizer
 
 runResponderM :: Message -> ResponderM u a -> ClientM u (a, ([u], [Responder u]))
-runResponderM msg rspAction = do
+runResponderM msg (ResponderM rspAction) = do
   (ans, emitted) <- runReaderT (runWriterT rspAction) msg
   
   let f e (us, rs) = case e of
@@ -73,18 +79,18 @@ runResponderM msg rspAction = do
 
 -- | Get the message we're responding to.
 getMessage :: ResponderM u Message
-getMessage = ask
+getMessage = ResponderM ask
 
 -- | Send a message to the IRC server.
 sendMessage :: Message -> ResponderM u ()
-sendMessage msg = do
+sendMessage msg = ResponderM $ do
   sender <- _sendMessage <$> get
   liftIO $ sender msg
 
 -- | Emit an "update" i.e. 'u' throughout this module.
 emitUpdate :: u -> ResponderM u ()
-emitUpdate = tell . (:[]) . EmitUpdate
+emitUpdate = ResponderM . tell . (:[]) . EmitUpdate
 
 -- | Emit a 'Responder' to be added to the list of active responders.
 emitResponder :: Responder u -> ResponderM u ()
-emitResponder = tell . (:[]) . EmitResponder
+emitResponder = ResponderM . tell . (:[]) . EmitResponder

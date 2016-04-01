@@ -1,13 +1,20 @@
 module Grumble.Client.Responders
-( pingPong
+( Update (..)
+, pingPong
 , nickRetry
 , listenMotdEnd
 ) where
 
 import Grumble.Prelude
 import Grumble.Message
-import Grumble.Client.Types
-import Grumble.Client.Monad
+import Grumble.Client
+
+
+data Update = PingPong
+            | NickRetry String
+            | NickAccepted String
+            | EndMotd
+              deriving Show
 
 noFinalizer :: ResponderM u () -> Responder u
 noFinalizer act = Responder act (return ())

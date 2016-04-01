@@ -19,8 +19,8 @@ library
                      , Grumble.Connection
                      , Grumble.Prelude
                      , Grumble.Client
-                     , Grumble.Client.Types
-                     , Grumble.Client.Monad
+                     , Grumble.Client.Internal.Monad
+                     , Grumble.Client.Internal.Types
                      , Grumble.Client.Responders
   build-depends:       base >= 4.7 && < 5
                      , network
@@ -35,6 +35,7 @@ library
                      , DeriveDataTypeable
                      , OverloadedStrings
                      , TupleSections
+                     , GeneralizedNewtypeDeriving
   default-language:    Haskell2010
 
 executable grumble
